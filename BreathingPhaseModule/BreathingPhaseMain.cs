@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using System.Threading;
 
 using System.Runtime.InteropServices;
@@ -23,18 +23,42 @@ namespace BreathingPhaseModule
 
         public static BreathingPhaseAnalyzer pBPA  = new BreathingPhaseAnalyzer();
 
+         ~BreathingPhaseMain()
+        {
+             UnInitializeSensor();
+    }
         public static double readCaliData()
         {
             double val = readCalibratedData();
             Console.WriteLine(val);
             return val;
         }
+        public static int init()
+        {
+            InitializeSensor();
+            pBPA.init();
+            return 1;
+        }
         public static int tick()
         {
+            int result;
             //read rawdata
+            double val = readCalibratedData();
             //analysis
+            result = pBPA.pushData(val);
             //return phaseResult
-            return 1;
+
+            return result;
+        }
+        public static int tick(double val)
+        {
+            int result;
+            //read rawdata            
+            //analysis
+            result = pBPA.pushData(val);
+            //return phaseResult
+
+            return result;
         }
         public static int debugPushData(List<BreathingPhaseData> dataList)
         {

@@ -5,7 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
@@ -60,6 +60,8 @@ namespace BreathingPhaseUI
         {
             double rawVal;
             int rawValInt;
+            int phase;
+            
             rawVal =  BreathingPhaseMain.readCaliData();
             
             rawValInt = (int)rawVal;
@@ -68,6 +70,12 @@ namespace BreathingPhaseUI
             BreathingPhaseData data_ = new BreathingPhaseData(currentInstance.textBox_uID.Text, rawVal, 0, nDataPoints);
             DataList.Add(data_);
             nDataPoints++;
+
+           phase=  BreathingPhaseMain.tick(rawVal);
+
+            AddResultPointtoChart(phase);
+            Console.Write(phase);
+
         }
         private static void AddDataPointtoChart(double val)
         {
@@ -130,7 +138,7 @@ namespace BreathingPhaseUI
             }            else {
                 cleanCharts();
                 DataList.Clear();
-                BreathingPhaseMain.InitializeSensor();
+                BreathingPhaseMain.init();
                 //set time for pulling data
                 liveStreamTimer = new System.Windows.Forms.Timer();
                 liveStreamTimer.Tick += new EventHandler(LiveStreamTimerTick);
@@ -221,7 +229,7 @@ namespace BreathingPhaseUI
 
                 BreathingPhaseMain.debugPushData(DataList);
 
-                Console.Write(DataList.Count);
+                //Console.Write(DataList.Count);
                 //display analysis result
 
             foreach(BreathingPhaseData t in DataList)
