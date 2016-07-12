@@ -51,7 +51,7 @@ namespace BreathingPhaseModule
         private int paramMaxItem = 300;
         private int paramMinGradientWindow = 5;
         private int paramMinSecondDWindow = 2 * 5;
-        private double paramZeroThreashold = 0.01;
+        private double paramZeroThreashold = 0.05;
 
         private double[] temporalWeight = { 0.5, 0.3, 0.1, 0.1 };
         private double lowPeakVal;
@@ -107,6 +107,25 @@ namespace BreathingPhaseModule
 
             return phaseResult;
         }
+        public int pushData(double val, ref double GradientValue)
+        {
+            curIndex++;
+            if (curIndex >= paramMaxItem) curIndex = 0;
+            dataArray[curIndex] = val;
+            nItem++;
+            int phaseResult = 0;
+            //calculate gradient
+            calGradient();
+            //calculate second derivative - retro
+            calSecondDerivative();
+            //phase detection
+            phaseResult = determinePhase();
+            double tt = gradientArray[curIndex];
+            Console.WriteLine(dataArray[curIndex].ToString() + "\t" + gradientArray[curIndex].ToString() + "\t" + phaseResult.ToString());
+            GradientValue = (float)gradientArray[curIndex];
+        //    GradientValue = (float) 0.00353;
+            return phaseResult;
+        }
         public void setParameter()
         {
 
@@ -145,12 +164,17 @@ namespace BreathingPhaseModule
             }
             //calculate secondderivative for curindex - paramMinSecondDWindow/2
             int SD = 0;
-            for (int i = 1; i <= paramMinSecondDWindow;i++) {
-                int diffIndex = curIndex - i;
+            int SDWindows = paramMinSecondDWindow;
+            int diffIndex = curIndex;
+            for (int i = 1; i <= SDWindows; i++) {
                 if (diffIndex < 0)
+                {
                     diffIndex = paramMaxItem + diffIndex;
+                }
                 if (gradientArray[diffIndex] > 0) SD++;
                 else SD--;
+               // if (Math.Abs(gradientArray[diffIndex])<paramZeroThreashold) { SDWindows += 2; }
+                diffIndex--;
             }
             if(SD==0)
             {
@@ -217,25 +241,31 @@ namespace BreathingPhaseModule
                 {
                     double phaseLevel=0;                    
                     Debug.Assert(result >= 100);
-                    Debug.Assert(highPeakVal - lowPeakVal > 0);
-                    if(result/100 == 1)
+                    if(highPeakVal - lowPeakVal >0)
                     {
-                        //inhale
-                        
-                        phaseLevel = (((dataArray[curIndex] - lowPeakVal) * 100) / (highPeakVal - lowPeakVal));      
-                                              
-                    } else if(result/100 ==3)
-                    {
-                        phaseLevel = (((dataArray[curIndex] - lowPeakVal) * 100) / (highPeakVal - lowPeakVal));
-                        phaseLevel = 100 - phaseLevel;
-                    } else
-                    {
-                        //should not reach here
-                        Debug.Assert(true);
+                        if (result / 100 == 1)
+                        {
+                            //inhale
+
+                            phaseLevel = (((dataArray[curIndex] - lowPeakVal) * 100) / (highPeakVal - lowPeakVal));
+
+                        }
+                        else if (result / 100 == 3)
+                        {
+                            phaseLevel = (((dataArray[curIndex] - lowPeakVal) * 100) / (highPeakVal - lowPeakVal));
+                            phaseLevel = 100 - phaseLevel;
+                        }
+                        else
+                        {
+                            //should not reach here
+                            Debug.Assert(true);
+                        }
+                        if (phaseLevel > 99) phaseLevel = 99;
+                        if (phaseLevel < 0) phaseLevel = 0;
+                        result += (int)phaseLevel;
                     }
-                    if (phaseLevel > 99) phaseLevel = 99;
-                    if (phaseLevel < 0) phaseLevel = 0;
-                    result += (int)phaseLevel;
+                    //Debug.Assert(highPeakVal - lowPeakVal > 0);
+                   
 
                 }
             }

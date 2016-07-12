@@ -21,6 +21,10 @@ namespace BreathingPhaseModule
         [DllImport("SensorDeviceWrapper.dll")]
         public static extern double readCalibratedData();
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool AllocConsole();
+
         public static BreathingPhaseAnalyzer pBPA  = new BreathingPhaseAnalyzer();
 
          ~BreathingPhaseMain()
@@ -40,7 +44,7 @@ namespace BreathingPhaseModule
             return 1;
         }
         public static int tick()
-        {
+        { //DEPRECATED
             int result;
             //read rawdata
             double val = readCalibratedData();
@@ -56,6 +60,19 @@ namespace BreathingPhaseModule
             //read rawdata            
             //analysis
             result = pBPA.pushData(val);
+            //return phaseResult
+
+            return result;
+        }
+        public static int tickwithGradient(ref double GradientValue)
+        {
+            int result;
+            //read rawdata
+            double val = readCalibratedData();
+            //analysis
+            //    result = pBPA.pushData(val);
+            result = pBPA.pushData(val, ref GradientValue);
+
             //return phaseResult
 
             return result;
